@@ -30,6 +30,13 @@ export interface RenderSvgOptions {
    * on-screen resolution, so at tiny sizes it only costs sharpness and time.
    */
   inkFilter?: boolean;
+  /**
+   * Extra CSS embedded in the SVG's <defs> — used to inline @font-face
+   * data: URIs so exported files render the handwriting fonts even in
+   * contexts (SVG-as-image, print windows) that cannot reach the app's
+   * own font files.
+   */
+  styleCss?: string;
 }
 
 export function renderPageSvg(
@@ -48,7 +55,8 @@ export function renderPageSvg(
   const noiseSeed = combineSeeds(config.seed, page.pageIndex) % 10000;
 
   const useFilter = options.inkFilter !== false;
-  const defs = useFilter ? inkFilter(filterId, ink, noiseSeed) : '';
+  const styleBlock = options.styleCss ? `<style>${options.styleCss}</style>` : '';
+  const defs = styleBlock + (useFilter ? inkFilter(filterId, ink, noiseSeed) : '');
   const paper = options.transparentBackground ? '' : renderPaperLayer(config.paper, size);
   const writing = renderWritingLayer(page, config, useFilter ? filterId : null, sizeMm);
   const decorations = renderDecorations(page, config, size, options.pageCount ?? 1, sizeMm);

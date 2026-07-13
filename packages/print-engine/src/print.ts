@@ -14,6 +14,12 @@ export interface PrintJob {
   pageWidthMm: number;
   pageHeightMm: number;
   title: string;
+  /**
+   * @font-face CSS with data: URIs. The print document loads in an isolated
+   * window/iframe with no access to the app's fonts, so handwriting fonts
+   * must travel inside the document itself.
+   */
+  fontCss?: string;
 }
 
 export interface PrintOptions {
@@ -47,6 +53,7 @@ export function buildPrintHtml(job: PrintJob, options: PrintOptions): string {
 <meta charset="utf-8">
 <title>${escapeHtml(job.title)}</title>
 <style>
+  ${job.fontCss ?? ''}
   @page { size: ${w}mm ${h}mm; margin: ${options.margins.top}mm ${options.margins.right}mm ${options.margins.bottom}mm ${options.margins.left}mm; }
   html, body { margin: 0; padding: 0; }
   .page { width: ${w}mm; height: ${h}mm; page-break-after: always; overflow: hidden; }

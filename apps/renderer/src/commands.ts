@@ -1,6 +1,7 @@
 import type { LayoutResult, ProjectDocument } from '@handscript/shared';
 import { ZOOM_LEVELS, resolvePageSize } from '@handscript/shared';
 import { renderDocumentSvgs } from '@handscript/export-engine';
+import { getStyle } from '@handscript/handwriting-engine';
 import {
   browserPrintAdapter,
   buildPrintHtml,
@@ -10,6 +11,7 @@ import { useStore } from './state/store.js';
 import { exportPdf, exportRaster, exportSvg } from './services/exporter.js';
 import { clearAutosave, openProjectDialog, saveProjectDialog } from './services/platform.js';
 import { IMPORT_ACCEPT, importFile } from './services/importers.js';
+import { buildEmbeddedFontCss } from './services/fontEmbedder.js';
 
 /**
  * Central command registry. Every user-facing action is a Command so the
@@ -201,12 +203,14 @@ export function buildCommands(ctx: CommandContext): Command[] {
           width: doc.config.page.width,
           height: doc.config.page.height,
         });
-        const svgs = renderDocumentSvgs(layout.pages, doc.config);
+        const fontCss = await buildEmbeddedFontCss(getStyle(doc.config.styleId));
+        const svgs = renderDocumentSvgs(layout.pages, doc.config, { styleCss: fontCss });
         const job = {
           pageSvgs: svgs,
           pageWidthMm: size.width,
           pageHeightMm: size.height,
           title: doc.title,
+          fontCss,
         };
         if (window.handscript) {
           await window.handscript.printHtml(buildPrintHtml(job, DEFAULT_PRINT_OPTIONS), {

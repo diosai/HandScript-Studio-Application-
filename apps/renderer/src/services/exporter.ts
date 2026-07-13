@@ -2,7 +2,9 @@ import type { LayoutResult, RenderConfig } from '@handscript/shared';
 import { resolvePageSize } from '@handscript/shared';
 import { buildPdf, rasterizeSvg, renderDocumentSvgs } from '@handscript/export-engine';
 import { buildPrintHtml, DEFAULT_PRINT_OPTIONS } from '@handscript/print-engine';
+import { getStyle } from '@handscript/handwriting-engine';
 import { saveBinaryFile } from './platform.js';
+import { buildEmbeddedFontCss } from './fontEmbedder.js';
 
 /**
  * Export orchestration: layout → page SVGs → requested format → save dialog.
@@ -29,6 +31,7 @@ export async function exportSvg(
 ): Promise<void> {
   const svgs = renderDocumentSvgs(layout.pages, config, {
     transparentBackground: settings.transparent,
+    styleCss: await buildEmbeddedFontCss(getStyle(config.styleId)),
   });
   const svg = svgs[pageIndex] ?? svgs[0];
   if (!svg) throw new Error('Nothing to export.');
@@ -50,6 +53,7 @@ export async function exportRaster(
   const size = pageSize(config);
   const svgs = renderDocumentSvgs(layout.pages, config, {
     transparentBackground: settings.transparent && format === 'png',
+    styleCss: await buildEmbeddedFontCss(getStyle(config.styleId)),
   });
   const svg = svgs[pageIndex] ?? svgs[0];
   if (!svg) throw new Error('Nothing to export.');
@@ -76,13 +80,14 @@ export async function exportPdf(
   onProgress?: (done: number, total: number) => void,
 ): Promise<void> {
   const size = pageSize(config);
-  const svgs = renderDocumentSvgs(layout.pages, config);
+  const fontCss = await buildEmbeddedFontCss(getStyle(config.styleId));
+  const svgs = renderDocumentSvgs(layout.pages, config, { styleCss: fontCss });
 
   let bytes: Uint8Array;
   if (window.handscript) {
     // Vector path: Chromium lays out the same SVGs and prints them to PDF.
     const html = buildPrintHtml(
-      { pageSvgs: svgs, pageWidthMm: size.width, pageHeightMm: size.height, title },
+      { pageSvgs: svgs, pageWidthMm: size.width, pageHeightMm: size.height, title, fontCss },
       DEFAULT_PRINT_OPTIONS,
     );
     bytes = await window.handscript.htmlToPdf(html, size.width, size.height);

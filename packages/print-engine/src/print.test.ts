@@ -25,6 +25,16 @@ describe('buildPrintHtml', () => {
     expect(html).toContain('My &lt;notes&gt;');
   });
 
+  it('embeds font CSS in the print document head when provided', () => {
+    const withFonts = {
+      ...job,
+      fontCss: "@font-face{font-family:'X';src:url(data:font/ttf;base64,AA);}",
+    };
+    const html = buildPrintHtml(withFonts, DEFAULT_PRINT_OPTIONS);
+    expect(html).toContain("font-family:'X'");
+    expect(buildPrintHtml(job, DEFAULT_PRINT_OPTIONS)).not.toContain('@font-face');
+  });
+
   it('applies the scale option to page SVG sizing', () => {
     const html = buildPrintHtml(job, { ...DEFAULT_PRINT_OPTIONS, scale: 0.5 });
     expect(html).toContain('width: 105mm');

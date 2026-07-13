@@ -39,6 +39,13 @@ describe('renderPageSvg', () => {
     expect(svg).toContain('data-layer="writing"');
   });
 
+  it('embeds provided style CSS (font data URIs) inside <defs>', () => {
+    const layout = layoutDocument('embedded fonts', config());
+    const css = "@font-face{font-family:'Patrick Hand';src:url(data:font/ttf;base64,AAAA);}";
+    const svg = renderPageSvg(layout.pages[0]!, config(), { styleCss: css });
+    expect(svg).toContain(`<defs><style>${css}</style>`);
+  });
+
   it('omits the paper layer for transparent exports', () => {
     const layout = layoutDocument('transparent', config());
     const svg = renderPageSvg(layout.pages[0]!, config(), { transparentBackground: true });
