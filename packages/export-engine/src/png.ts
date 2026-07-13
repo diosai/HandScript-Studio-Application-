@@ -28,7 +28,14 @@ export async function rasterizeSvg(svg: string, options: RasterizeOptions): Prom
   const width = Math.round(mmToPx(options.widthMm, options.dpi));
   const height = Math.round(mmToPx(options.heightMm, options.dpi));
 
-  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+  // Rewrite the SVG root's physical (mm) size to the exact target pixel size.
+  // Some engines — Safari in particular — rasterise an <img> SVG at its
+  // intrinsic CSS size (~96 dpi) and then bitmap-upscale in drawImage, which
+  // blurs high-DPI exports. With pixel dimensions matching the canvas, every
+  // engine rasterises glyphs *and filters* at full target resolution.
+  const sized = setSvgPixelSize(svg, width, height);
+
+  const url = URL.createObjectURL(new Blob([sized], { type: 'image/svg+xml;charset=utf-8' }));
   try {
     const image = await loadImage(url);
     const canvas = document.createElement('canvas');
@@ -45,6 +52,18 @@ export async function rasterizeSvg(svg: string, options: RasterizeOptions): Prom
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+/**
+ * Replace the width/height attributes on the root <svg> tag with pixel values.
+ * The viewBox is untouched, so the drawing scales to fill the new size.
+ * Exported for tests; tolerant of attribute order and missing sizes.
+ */
+export function setSvgPixelSize(svg: string, widthPx: number, heightPx: number): string {
+  return svg.replace(/^(<svg[^>]*?)>/, (_match, openTag: string) => {
+    const cleaned = openTag.replace(/\swidth="[^"]*"/, '').replace(/\sheight="[^"]*"/, '');
+    return `${cleaned} width="${widthPx}" height="${heightPx}">`;
+  });
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {

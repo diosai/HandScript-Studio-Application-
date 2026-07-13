@@ -89,17 +89,17 @@ export async function exportPdf(
   } else {
     const pages = [];
     for (let i = 0; i < svgs.length; i++) {
+      // PNG keeps line art crisp; JPEG ringing is very visible on handwriting.
       const blob = await rasterizeSvg(svgs[i]!, {
         widthMm: size.width,
         heightMm: size.height,
         dpi: settings.dpi,
-        format: 'jpeg',
-        quality: 0.92,
+        format: 'png',
         background: config.paper.backgroundColor,
       });
       pages.push({
         bytes: new Uint8Array(await blob.arrayBuffer()),
-        format: 'jpeg' as const,
+        format: 'png' as const,
         widthMm: size.width,
         heightMm: size.height,
       });

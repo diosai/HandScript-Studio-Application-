@@ -24,6 +24,12 @@ export interface RenderSvgOptions {
   transparentBackground?: boolean;
   /** Total page count, needed for "Page x of n" decorations. */
   pageCount?: number;
+  /**
+   * Apply the ink-simulation filter (default true). Small renders —
+   * thumbnails, low preview zooms — disable it: the filter rasterises at
+   * on-screen resolution, so at tiny sizes it only costs sharpness and time.
+   */
+  inkFilter?: boolean;
 }
 
 export function renderPageSvg(
@@ -41,9 +47,10 @@ export function renderPageSvg(
   const filterId = `ink-${page.pageIndex}`;
   const noiseSeed = combineSeeds(config.seed, page.pageIndex) % 10000;
 
-  const defs = inkFilter(filterId, ink, noiseSeed);
+  const useFilter = options.inkFilter !== false;
+  const defs = useFilter ? inkFilter(filterId, ink, noiseSeed) : '';
   const paper = options.transparentBackground ? '' : renderPaperLayer(config.paper, size);
-  const writing = renderWritingLayer(page, config, filterId, sizeMm);
+  const writing = renderWritingLayer(page, config, useFilter ? filterId : null, sizeMm);
   const decorations = renderDecorations(page, config, size, options.pageCount ?? 1, sizeMm);
 
   return (
@@ -65,7 +72,7 @@ export function renderDocumentSvgs(
 function renderWritingLayer(
   page: LayoutPage,
   config: RenderConfig,
-  filterId: string,
+  filterId: string | null,
   sizeMm: number,
 ): string {
   const style = getStyle(config.styleId);
@@ -97,8 +104,9 @@ function renderWritingLayer(
     parts.push(`<g data-line="${fmt(line.baselineY)}">${lineParts.join('')}</g>`);
   }
 
+  const filterAttr = filterId ? ` filter="url(#${filterId})"` : '';
   return (
-    `<g data-layer="writing" filter="url(#${filterId})" fill="${ink.color}" ` +
+    `<g data-layer="writing"${filterAttr} fill="${ink.color}" ` +
     `font-family="${fontFamily}" font-size="${fmt(sizeMm)}">${parts.join('')}</g>`
   );
 }

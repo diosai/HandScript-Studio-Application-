@@ -31,6 +31,14 @@ describe('renderPageSvg', () => {
     expect(a).toBe(b);
   });
 
+  it('omits the ink filter when inkFilter is false (draft/thumbnail mode)', () => {
+    const layout = layoutDocument('draft mode', config());
+    const svg = renderPageSvg(layout.pages[0]!, config(), { inkFilter: false });
+    expect(svg).not.toContain('feTurbulence');
+    expect(svg).not.toContain('filter="url(');
+    expect(svg).toContain('data-layer="writing"');
+  });
+
   it('omits the paper layer for transparent exports', () => {
     const layout = layoutDocument('transparent', config());
     const svg = renderPageSvg(layout.pages[0]!, config(), { transparentBackground: true });

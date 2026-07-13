@@ -5,6 +5,8 @@ import { renderPageSvg } from '@handscript/export-engine';
 import { useStore } from '../state/store.js';
 
 const PX_PER_MM = 96 / 25.4;
+/** Below this on-screen density the ink filter only costs sharpness. */
+const FILTER_MIN_PX_PER_MM = 2.6;
 
 /**
  * Live paginated preview.
@@ -31,6 +33,7 @@ export function PreviewPanel({
   });
   const pageW = size.width * PX_PER_MM * ui.zoom;
   const pageH = size.height * PX_PER_MM * ui.zoom;
+  const draft = pageW / size.width < FILTER_MIN_PX_PER_MM;
 
   const currentPage = Math.min(ui.currentPage, layout.pages.length - 1);
   const visiblePages: LayoutPage[] =
@@ -66,6 +69,7 @@ export function PreviewPanel({
                 pageCount={layout.pages.length}
                 widthPx={pageW}
                 heightPx={pageH}
+                draft={draft}
               />
               <div className="page-number-chip">
                 Page {page.pageIndex + 1} of {layout.pages.length}
@@ -127,12 +131,15 @@ const LazyPage = memo(function LazyPage({
   pageCount,
   widthPx,
   heightPx,
+  draft = false,
 }: {
   page: LayoutPage;
   config: RenderConfig;
   pageCount: number;
   widthPx: number;
   heightPx: number;
+  /** Skip the ink filter (thumbnails / low zoom) for crisp small renders. */
+  draft?: boolean;
 }): JSX.Element {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(page.pageIndex < 3);
@@ -149,8 +156,8 @@ const LazyPage = memo(function LazyPage({
   }, []);
 
   const svg = useMemo(
-    () => (visible ? renderPageSvg(page, config, { pageCount }) : null),
-    [visible, page, config, pageCount],
+    () => (visible ? renderPageSvg(page, config, { pageCount, inkFilter: !draft }) : null),
+    [visible, page, config, pageCount, draft],
   );
 
   const style = { width: widthPx, height: heightPx };
@@ -209,6 +216,7 @@ function ThumbnailRail({
             pageCount={layout.pages.length}
             widthPx={thumbW}
             heightPx={thumbH}
+            draft
           />
         </button>
       ))}
