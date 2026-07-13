@@ -1,0 +1,41 @@
+/* Optional handwriting font pack.
+   Drop OFL-licensed .ttf/.woff2 files matching these family names into this
+   folder (see assets/fonts/README.md for the curated list and licences).
+   Missing files fail silently — styles fall back to the generic `cursive`
+   family, so the app works fully offline without the pack. */
+
+@font-face {
+  font-family: 'Patrick Hand';
+  src: url('./PatrickHand-Regular.ttf');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Comic Neue';
+  src: url('./ComicNeue-Regular.ttf');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Dancing Script';
+  src: url('./DancingScript-Regular.ttf');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Schoolbell';
+  src: url('./Schoolbell-Regular.ttf');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Great Vibes';
+  src: url('./GreatVibes-Regular.ttf');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Tangerine';
+  src: url('./Tangerine-Regular.ttf');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Architects Daughter';
+  src: url('./ArchitectsDaughter-Regular.ttf');
+  font-display: swap;
+}

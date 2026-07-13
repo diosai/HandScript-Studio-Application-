@@ -1,0 +1,16 @@
+{
+  "name": "@handscript/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HandScript Studio desktop shell (Electron main process).",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "npm run build && electron . --dev",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.2.0"
+  }
+}
